@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.CANDriveSubsystem;
@@ -65,7 +66,13 @@ public class AlignToHub extends Command {
             //     driveSubsystem.arcadeDrive(0.0, xSpeed);
             // }
             
-            xSpeed /= 25;
+       
+
+            if (xSpeed > 0 ) {
+                xSpeed = Math.min(xSpeed, 0.5);
+            } else {
+                xSpeed = Math.max(xSpeed, -0.5);
+            }
 
             driveSubsystem.arcadeDrive(0.0, xSpeed);
 

@@ -11,12 +11,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
-          }
-        },
-        {
           "type": "wait",
           "data": {
             "waitTime": 10.0
@@ -25,7 +19,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "New Path"
+            "pathName": "Shoot to Intake"
           }
         }
       ]

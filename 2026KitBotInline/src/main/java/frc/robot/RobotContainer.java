@@ -5,11 +5,15 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import static frc.robot.Constants.OperatorConstants.*;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+
 import static frc.robot.Constants.FuelConstants.*;
 
 import frc.robot.LimelightAlign.*;
@@ -19,8 +23,6 @@ import frc.robot.subsystems.CANDriveSubsystem;
 import frc.robot.subsystems.CANFuelSubsystem;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj.Joystick;
-
-
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -44,13 +46,13 @@ public class RobotContainer {
       DRIVER_CONTROLLER_PORT);
 
   // The operator's controller
-  // private final CommandXboxController operatorController = new CommandXboxController(
-  //     OPERATOR_CONTROLLER_PORT);
+  private final Joystick operatorController = new Joystick(
+      OPERATOR_CONTROLLER_PORT);
 
   // The autonomous chooser
-  private final SendableChooser<Command> autoChooser = new SendableChooser<>();
+  private final SendableChooser<Command> autoChooser;
 
-    // In order to align using limelight
+  // In order to align using limelight
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -60,10 +62,15 @@ public class RobotContainer {
 
     // Set the options to show up in the Dashboard for selecting auto modes. If you
     // add additional auto modes you can add additional lines here with
+    autoChooser = AutoBuilder.buildAutoChooser();
     // autoChooser.addOption
-    // autoChooser.setDefaultOption("Drive and shoot from middle", Autos.driveShootMiddle(driveSubsystem, ballSubsystem));
-    // autoChooser.addOption("Drive and shoot from left", Autos.driveShootLeft(driveSubsystem, ballSubsystem));
-    // autoChooser.addOption("Drive and shoot from right", Autos.driveShootRight(driveSubsystem, ballSubsystem));
+    // autoChooser.setDefaultOption("Drive and shoot from middle",
+    // Autos.driveShootMiddle(driveSubsystem, ballSubsystem));
+    // autoChooser.addOption("Drive and shoot from left",
+    // Autos.driveShootLeft(driveSubsystem, ballSubsystem));
+    // autoChooser.addOption("Drive and shoot from right",
+    // Autos.driveShootRight(driveSubsystem, ballSubsystem));
+    SmartDashboard.putData("Auto Chooser", autoChooser);
   }
 
   /**
@@ -82,9 +89,13 @@ public class RobotContainer {
     // While the left bumper on operator controller is held, intake Fuel
     new JoystickButton(driverController, 2)
         .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.intake(), () -> ballSubsystem.stop()));
+
+    new JoystickButton(operatorController, 2)
+        .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.intake(), () -> ballSubsystem.stop()));
+
     // While the right bumper on the operator controller is held, spin up for 1
     // second, then launch fuel. When the button is released, stop.
-    
+
     new JoystickButton(driverController, 1)
         .whileTrue(ballSubsystem.spinUpCommand().withTimeout(SPIN_UP_SECONDS)
             .andThen(ballSubsystem.launchCommand())
@@ -94,12 +105,9 @@ public class RobotContainer {
     new JoystickButton(driverController, 3)
         .whileTrue(ballSubsystem.runEnd(() -> ballSubsystem.eject(), () -> ballSubsystem.stop()));
 
-    
-
     // Auto-alignment for shooting
     new JoystickButton(driverController, 4)
         .onTrue(new AlignToHub(driveSubsystem).withTimeout(3));
-
 
     // Set the default command for the drive subsystem to the command provided by
     // factory with the values provided by the joystick axes on the driver
@@ -109,14 +117,15 @@ public class RobotContainer {
     // results in clockwise rotation (front of the robot turning right). Both axes
     // are also scaled down so the rotation is more easily controllable.
     driveSubsystem.setDefaultCommand(
-        driveSubsystem.driveArcade(
-            () -> -driverController.getY() * DRIVE_SCALING,
-            () -> - driverController.getZ() * ROTATION_SCALING));
+        driveSubsystem.run(() -> driveSubsystem.arcadeDrive(-driverController.getY() * DRIVE_SCALING,
+            ((-driverController.getZ() * Z_ROTATION_SCALING) - (driverController.getX() * X_ROTATION_SCALING)))));
   }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
+   * () -> -driverController.getY() * DRIVE_SCALING,
+   * () -> - driverController.getZ() * ROTATION_SCALING
+   * 
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
